@@ -1,0 +1,89 @@
+trigger:
+  branches:
+    include:
+      - gitops
+
+pr:
+  branches:
+    include:
+      - gitops
+
+variables:
+  acrName: 'acrkiteworkstestapp1'
+  imageName: 'kiteworks-app'
+  imageTag: '$(Build.BuildId)'
+  gitopsRepoUrl: 'https://github.com/icelex10/KiteworksTestApp.git'
+  gitopsBranch: 'gitops'
+  azureServiceConnection: 'sc-kiteworks-azure'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: self
+
+- bash: |
+    set -euo pipefail
+    curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/scripts/install.sh | bash
+  displayName: Install Gitleaks
+
+- bash: |
+    set -euo pipefail
+    gitleaks detect --no-banner --redact --source . --exit-code 1 --log-opts="--all --full-history"
+  displayName: Secret scan with Gitleaks
+
+- bash: |
+    set -euo pipefail
+    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.53.0
+  displayName: Install Trivy
+
+- task: AzureCLI@2
+  displayName: Login to Azure and ACR
+  inputs:
+    azureSubscription: '$(azureServiceConnection)'
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      set -euo pipefail
+      az acr login --name $(acrName)
+
+- bash: |
+    set -euo pipefail
+    docker build \
+      -t $(acrName).azurecr.io/$(imageName):$(imageTag) \
+      -t $(acrName).azurecr.io/$(imageName):latest \
+      .
+  displayName: Build application image
+
+- bash: |
+    set -euo pipefail
+    trivy image --severity HIGH,CRITICAL --exit-code 1 $(acrName).azurecr.io/$(imageName):$(imageTag)
+  displayName: Image scan with Trivy
+
+- bash: |
+    set -euo pipefail
+    docker push $(acrName).azurecr.io/$(imageName):$(imageTag)
+    docker push $(acrName).azurecr.io/$(imageName):latest
+  displayName: Push image to ACR
+
+- bash: |
+    set -euo pipefail
+    mkdir -p /tmp/gitops-repo
+    git clone --branch $(gitopsBranch) $(gitopsRepoUrl) /tmp/gitops-repo
+    cd /tmp/gitops-repo
+
+    if [ ! -f gitops/dev/kustomization.yaml ]; then
+      echo "dev kustomization not found"
+      exit 1
+    fi
+
+    curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+    chmod +x kustomize
+    ./kustomize edit set image kiteworks-app=$(acrName).azurecr.io/$(imageName):$(imageTag)
+
+    git config user.email "azuredevops@local"
+    git config user.name "Azure DevOps"
+    git add .
+    git diff --cached --quiet || git commit -m "Deploy $(imageName):$(imageTag)"
+    git push origin $(gitopsBranch)
+  displayName: Update GitOps image tag and push to repo
