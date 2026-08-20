@@ -82,8 +82,13 @@ steps:
 
 - bash: |
     set -euo pipefail
+    if [ -z "${GITHUB_TOKEN:-}" ]; then
+      echo "githubPat pipeline secret is not configured"
+      exit 1
+    fi
+    AUTH_HEADER="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
     mkdir -p /tmp/gitops-repo
-    git clone --branch "$(gitopsBranch)" "$(gitopsRepoUrl)" /tmp/gitops-repo
+    git -c "http.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" clone --branch "$(gitopsBranch)" "$(gitopsRepoUrl)" /tmp/gitops-repo
     cd /tmp/gitops-repo
 
     if [ ! -f gitops/dev/kustomization.yaml ]; then
@@ -100,6 +105,8 @@ steps:
     git config user.name "Azure DevOps"
     git add kustomization.yaml
     git diff --cached --quiet || git commit -m "Deploy $(imageName):$(imageTag)"
-    git push origin "$(gitopsBranch)"
+    git -c "http.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" push origin "$(gitopsBranch)"
   displayName: Update GitOps image tag and push to repo
+  env:
+    GITHUB_TOKEN: $(githubPat)
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
