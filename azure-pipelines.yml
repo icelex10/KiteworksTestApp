@@ -24,7 +24,11 @@ steps:
 
 - bash: |
     set -euo pipefail
-    curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/scripts/install.sh | bash
+    GITLEAKS_VERSION="v8.18.4"
+    GITLEAKS_ARCHIVE="gitleaks_${GITLEAKS_VERSION#v}_linux_x64.tar.gz"
+    curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/${GITLEAKS_ARCHIVE}" -o /tmp/gitleaks.tar.gz
+    tar -xzf /tmp/gitleaks.tar.gz -C /tmp
+    sudo install /tmp/gitleaks /usr/local/bin/gitleaks
   displayName: Install Gitleaks
 
 - bash: |
