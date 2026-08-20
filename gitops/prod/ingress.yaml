@@ -3,10 +3,16 @@ kind: Ingress
 metadata:
   name: kiteworks-app
   namespace: kiteworks-prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - kiteworkstest-prod.eastus2.cloudapp.azure.com
+      secretName: kiteworks-prod-tls
   rules:
-    - host: kiteworkstest-prod.centralus.cloudapp.azure.com
+    - host: kiteworkstest-prod.eastus2.cloudapp.azure.com
       http:
         paths:
           - path: /
