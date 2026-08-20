@@ -6,7 +6,7 @@ metadata:
   labels:
     app: kiteworks-app
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: kiteworks-app
   ports:

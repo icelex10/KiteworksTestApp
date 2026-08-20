@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kiteworks-app
+  namespace: kiteworks-dev
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: kiteworkstest-dev.centralus.cloudapp.azure.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kiteworks-app
+                port:
+                  number: 80
