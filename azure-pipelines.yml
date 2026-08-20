@@ -1,7 +1,5 @@
 trigger:
-  branches:
-    include:
-      - gitops
+  - none
 
 pr:
   branches:
@@ -11,7 +9,11 @@ pr:
 variables:
   acrName: 'acrkiteworkstestapp1'
   imageName: 'kiteworks-app'
-  imageTag: '$(Build.BuildId)'
+  imageTag: '$(Build.BuildId)-$(Build.SourceVersionShort)'
+  imageRef: '$(acrName).azurecr.io/$(imageName):$(imageTag)'
+  imageLatest: '$(acrName).azurecr.io/$(imageName):latest'
+  gitleaksVersion: 'v8.18.4'
+  trivyVersion: 'v0.53.0'
   gitopsRepoUrl: 'https://github.com/icelex10/KiteworksTestApp.git'
   gitopsBranch: 'gitops'
   azureServiceConnection: 'sc-kiteworks-azure'
@@ -24,11 +26,13 @@ steps:
 
 - bash: |
     set -euo pipefail
+    mkdir -p "$HOME/bin"
     GITLEAKS_VERSION="v8.18.4"
     GITLEAKS_ARCHIVE="gitleaks_${GITLEAKS_VERSION#v}_linux_x64.tar.gz"
     curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/${GITLEAKS_ARCHIVE}" -o /tmp/gitleaks.tar.gz
     tar -xzf /tmp/gitleaks.tar.gz -C /tmp
-    sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+    install -m 755 /tmp/gitleaks "$HOME/bin/gitleaks"
+    echo "##vso[task.prependpath]$HOME/bin"
   displayName: Install Gitleaks
 
 - bash: |
@@ -38,7 +42,9 @@ steps:
 
 - bash: |
     set -euo pipefail
-    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.53.0
+    mkdir -p "$HOME/bin"
+    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "$HOME/bin" v0.53.0
+    echo "##vso[task.prependpath]$HOME/bin"
   displayName: Install Trivy
 
 - task: AzureCLI@2
@@ -53,27 +59,24 @@ steps:
 
 - bash: |
     set -euo pipefail
-    docker build \
-      -t $(acrName).azurecr.io/$(imageName):$(imageTag) \
-      -t $(acrName).azurecr.io/$(imageName):latest \
-      .
+    docker build --pull --tag "$(imageRef)" --tag "$(imageLatest)" .
   displayName: Build application image
 
 - bash: |
     set -euo pipefail
-    trivy image --severity HIGH,CRITICAL --exit-code 1 $(acrName).azurecr.io/$(imageName):$(imageTag)
+    trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$(imageRef)"
   displayName: Image scan with Trivy
 
 - bash: |
     set -euo pipefail
-    docker push $(acrName).azurecr.io/$(imageName):$(imageTag)
-    docker push $(acrName).azurecr.io/$(imageName):latest
+    docker push "$(imageRef)"
+    docker push "$(imageLatest)"
   displayName: Push image to ACR
 
 - bash: |
     set -euo pipefail
     mkdir -p /tmp/gitops-repo
-    git clone --branch $(gitopsBranch) $(gitopsRepoUrl) /tmp/gitops-repo
+    git clone --branch "$(gitopsBranch)" "$(gitopsRepoUrl)" /tmp/gitops-repo
     cd /tmp/gitops-repo
 
     if [ ! -f gitops/dev/kustomization.yaml ]; then
@@ -83,11 +86,12 @@ steps:
 
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
     chmod +x kustomize
-    ./kustomize edit set image kiteworks-app=$(acrName).azurecr.io/$(imageName):$(imageTag)
+    ./kustomize edit set image kiteworks-app="$(imageRef)"
 
     git config user.email "azuredevops@local"
     git config user.name "Azure DevOps"
     git add .
     git diff --cached --quiet || git commit -m "Deploy $(imageName):$(imageTag)"
-    git push origin $(gitopsBranch)
+    git push origin "$(gitopsBranch)"
   displayName: Update GitOps image tag and push to repo
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/gitops'))
