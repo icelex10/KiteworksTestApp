@@ -1,0 +1,5 @@
+# Environment ownership for GitOps changes.
+# These owners are requested when the matching path is changed in a pull request.
+/gitops/dev/       @icelex10
+/gitops/staging/   @icelex10
+/gitops/prod/      @icelex10
