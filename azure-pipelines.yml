@@ -15,7 +15,7 @@ variables:
   imageRef: '$(acrName).azurecr.io/$(imageName):$(imageTag)'
   imageLatest: '$(acrName).azurecr.io/$(imageName):latest'
   gitleaksVersion: 'v8.18.4'
-  trivyVersion: 'v0.53.0'
+  trivyVersion: 'v0.74.0'
   gitopsRepoUrl: 'https://github.com/icelex10/KiteworksTestApp.git'
   gitopsBranch: 'gitops'
   azureServiceConnection: 'sc-kiteworks-azure'
@@ -29,7 +29,7 @@ steps:
 - bash: |
     set -euo pipefail
     mkdir -p "$HOME/bin"
-    GITLEAKS_VERSION="v8.18.4"
+    GITLEAKS_VERSION="$(gitleaksVersion)"
     GITLEAKS_ARCHIVE="gitleaks_${GITLEAKS_VERSION#v}_linux_x64.tar.gz"
     curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/${GITLEAKS_ARCHIVE}" -o /tmp/gitleaks.tar.gz
     tar -xzf /tmp/gitleaks.tar.gz -C /tmp
@@ -45,7 +45,8 @@ steps:
 - bash: |
     set -euo pipefail
     mkdir -p "$HOME/bin"
-    TRIVY_VERSION="0.53.0"
+    TRIVY_VERSION="$(trivyVersion)"
+    TRIVY_VERSION="${TRIVY_VERSION#v}"
     curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -o /tmp/trivy.tar.gz
     tar -xzf /tmp/trivy.tar.gz -C /tmp
     install -m 755 /tmp/trivy "$HOME/bin/trivy"
