@@ -3,18 +3,12 @@ trigger:
     include:
       - main
 
-pr:
-  branches:
-    include:
-      - gitops
-
 variables:
   acrName: 'acrkiteworkstestapp1'
   imageName: 'kiteworks-app'
   appVersion: '1.0'
   imageTag: '$(appVersion).$(Build.BuildId)'
   imageRef: '$(acrName).azurecr.io/$(imageName):$(imageTag)'
-  imageLatest: '$(acrName).azurecr.io/$(imageName):latest'
   gitleaksVersion: 'v8.18.4'
   trivyVersion: 'v0.74.0'
   gitopsBranch: 'gitops'
@@ -66,7 +60,7 @@ steps:
 
 - bash: |
     set -euo pipefail
-    docker build --pull --build-arg IMAGE_TAG="$(imageTag)" --tag "$(imageRef)" --tag "$(imageLatest)" .
+    docker build --pull --build-arg IMAGE_TAG="$(imageTag)" --tag "$(imageRef)" .
   displayName: Build application image
 
 - bash: |
@@ -77,7 +71,6 @@ steps:
 - bash: |
     set -euo pipefail
     docker push "$(imageRef)"
-    docker push "$(imageLatest)"
   displayName: Push image to ACR
 
 - bash: |
