@@ -11,7 +11,8 @@ pr:
 variables:
   acrName: 'acrkiteworkstestapp1'
   imageName: 'kiteworks-app'
-  imageTag: '$(Build.BuildId)-$(Build.SourceVersionShort)'
+  appVersion: '1.0'
+  imageTag: '$(appVersion).$(Build.BuildId)'
   imageRef: '$(acrName).azurecr.io/$(imageName):$(imageTag)'
   imageLatest: '$(acrName).azurecr.io/$(imageName):latest'
   gitleaksVersion: 'v8.18.4'
@@ -100,4 +101,4 @@ steps:
     git diff --cached --quiet || git commit -m "Deploy $(imageName):$(imageTag)"
     git push origin "$(gitopsBranch)"
   displayName: Update GitOps image tag and push to repo
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/gitops'))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
