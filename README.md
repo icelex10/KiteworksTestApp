@@ -33,8 +33,8 @@ The repository is intended to be synced by Argo CD using the `gitops` branch and
 The current environment endpoints are:
 
 - dev: `http://kiteworkstest-dev.centralus.cloudapp.azure.com`
-- staging: `http://kiteworkstest-staging.centralus.cloudapp.azure.com`
-- prod: `http://kiteworkstest-prod.centralus.cloudapp.azure.com`
+- staging: `http://kiteworkstest-staging.eastus.cloudapp.azure.com`
+- prod: `http://kiteworkstest-prod.eastus2.cloudapp.azure.com`
 
 ## Promotion policy
 

@@ -6,7 +6,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: kiteworkstest-staging.centralus.cloudapp.azure.com
+    - host: kiteworkstest-staging.eastus.cloudapp.azure.com
       http:
         paths:
           - path: /
