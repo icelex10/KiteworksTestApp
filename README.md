@@ -17,8 +17,10 @@ Each environment contains its own namespace plus the workload resources for the 
 The app is delivered as a simple public-facing web workload on AKS:
 
 - `Deployment` with a containerized web app
-- `Service` of type `LoadBalancer` for public access
+- `ClusterIP` Service behind the NGINX Ingress reverse proxy
 - `ConfigMap` for environment-specific settings
+
+The application Services are now `ClusterIP` services. NGINX Ingress is the public reverse proxy, with one static Azure public IP and Azure-provided DNS name per AKS environment. The current MVP uses HTTP only; TLS and custom DNS are intentionally deferred.
 
 ## Files of interest
 
@@ -27,6 +29,12 @@ The app is delivered as a simple public-facing web workload on AKS:
 - [gitops/prod/kustomization.yaml](gitops/prod/kustomization.yaml)
 
 The repository is intended to be synced by Argo CD using the `gitops` branch and the environment-specific application paths.
+
+The current environment endpoints are:
+
+- dev: `http://kiteworkstest-dev.centralus.cloudapp.azure.com`
+- staging: `http://kiteworkstest-staging.centralus.cloudapp.azure.com`
+- prod: `http://kiteworkstest-prod.centralus.cloudapp.azure.com`
 
 ## Promotion policy
 

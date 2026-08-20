@@ -5,7 +5,8 @@ resources:
 - configmap.yaml
 - deployment.yaml
 - service.yaml
+- ingress.yaml
 images:
 - name: kiteworks-app
   newName: acrkiteworkstestapp1.azurecr.io/kiteworks-app
-  newTag: 1.0.40
+  newTag: 1.0.42
