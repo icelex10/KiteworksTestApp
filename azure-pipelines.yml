@@ -11,7 +11,8 @@ pr:
 variables:
   acrName: 'acrkiteworkstestapp1'
   imageName: 'kiteworks-app'
-  imageTag: '$(Build.BuildId)-$(Build.SourceVersionShort)'
+  appVersion: '1.0'
+  imageTag: '$(appVersion).$(Build.BuildId)'
   imageRef: '$(acrName).azurecr.io/$(imageName):$(imageTag)'
   imageLatest: '$(acrName).azurecr.io/$(imageName):latest'
   gitleaksVersion: 'v8.18.4'
@@ -92,12 +93,13 @@ steps:
 
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
     chmod +x kustomize
-    ./kustomize edit set image kiteworks-app="$(imageRef)"
+    cd gitops/dev
+    ../../kustomize edit set image kiteworks-app="$(imageRef)"
 
     git config user.email "azuredevops@local"
     git config user.name "Azure DevOps"
-    git add .
+    git add kustomization.yaml
     git diff --cached --quiet || git commit -m "Deploy $(imageName):$(imageTag)"
     git push origin "$(gitopsBranch)"
   displayName: Update GitOps image tag and push to repo
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/gitops'))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
