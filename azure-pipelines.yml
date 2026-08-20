@@ -93,11 +93,12 @@ steps:
 
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
     chmod +x kustomize
-    ./kustomize edit set image kiteworks-app="$(imageRef)"
+    cd gitops/dev
+    ../../kustomize edit set image kiteworks-app="$(imageRef)"
 
     git config user.email "azuredevops@local"
     git config user.name "Azure DevOps"
-    git add .
+    git add kustomization.yaml
     git diff --cached --quiet || git commit -m "Deploy $(imageName):$(imageTag)"
     git push origin "$(gitopsBranch)"
   displayName: Update GitOps image tag and push to repo
