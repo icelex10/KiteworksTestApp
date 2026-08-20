@@ -3,8 +3,14 @@ kind: Ingress
 metadata:
   name: kiteworks-app
   namespace: kiteworks-dev
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - kiteworkstest-dev.centralus.cloudapp.azure.com
+      secretName: kiteworks-dev-tls
   rules:
     - host: kiteworkstest-dev.centralus.cloudapp.azure.com
       http:

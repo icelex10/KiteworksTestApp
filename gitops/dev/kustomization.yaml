@@ -9,4 +9,4 @@ resources:
 images:
 - name: kiteworks-app
   newName: acrkiteworkstestapp1.azurecr.io/kiteworks-app
-  newTag: 1.0.42
+  newTag: 1.0.45
