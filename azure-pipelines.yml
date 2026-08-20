@@ -66,7 +66,7 @@ steps:
 
 - bash: |
     set -euo pipefail
-    docker build --pull --tag "$(imageRef)" --tag "$(imageLatest)" .
+    docker build --pull --build-arg IMAGE_TAG="$(imageTag)" --tag "$(imageRef)" --tag "$(imageLatest)" .
   displayName: Build application image
 
 - bash: |
