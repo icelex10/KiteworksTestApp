@@ -1,5 +1,7 @@
 trigger:
-  - none
+  branches:
+    include:
+      - main
 
 pr:
   branches:
@@ -43,7 +45,10 @@ steps:
 - bash: |
     set -euo pipefail
     mkdir -p "$HOME/bin"
-    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "$HOME/bin" v0.53.0
+    TRIVY_VERSION="0.53.0"
+    curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -o /tmp/trivy.tar.gz
+    tar -xzf /tmp/trivy.tar.gz -C /tmp
+    install -m 755 /tmp/trivy "$HOME/bin/trivy"
     echo "##vso[task.prependpath]$HOME/bin"
   displayName: Install Trivy
 
