@@ -20,7 +20,7 @@ The app is delivered as a simple public-facing web workload on AKS:
 - `ClusterIP` Service behind the NGINX Ingress reverse proxy
 - `ConfigMap` for environment-specific settings
 
-The application Services are now `ClusterIP` services. NGINX Ingress is the public reverse proxy, with one static Azure public IP and Azure-provided DNS name per AKS environment. The current MVP uses HTTP only; TLS and custom DNS are intentionally deferred.
+The application Services are private `ClusterIP` services behind NGINX Ingress. Each environment has its own static Azure public IP and Azure-provided DNS name. HTTPS is managed by cert-manager with Let's Encrypt.
 
 ## Files of interest
 
@@ -32,9 +32,9 @@ The repository is intended to be synced by Argo CD using the `gitops` branch and
 
 The current environment endpoints are:
 
-- dev: `http://kiteworkstest-dev.centralus.cloudapp.azure.com`
-- staging: `http://kiteworkstest-staging.eastus.cloudapp.azure.com`
-- prod: `http://kiteworkstest-prod.eastus2.cloudapp.azure.com`
+- dev: `https://kiteworkstest-dev.centralus.cloudapp.azure.com`
+- staging: `https://kiteworkstest-staging.eastus.cloudapp.azure.com`
+- prod: `https://kiteworkstest-prod.eastus2.cloudapp.azure.com`
 
 ## Promotion policy
 
